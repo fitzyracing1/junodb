@@ -13,6 +13,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Build
-        run: go build ./...
+        # storageserv needs a locally built RocksDB (cgo, third_party/forked gorocksdb) - excluded here
+        run: go build $(go list -e ./... | grep -v -e /cmd/storageserv -e /third_party/)
       - name: Vet
-        run: go vet ./...
+        run: go vet $(go list -e ./... | grep -v -e /cmd/storageserv -e /third_party/)
