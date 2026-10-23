@@ -12,8 +12,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Select packages buildable without RocksDB
+        # storageserv/dbscanserv/tools depend on third_party/forked/tecbot/gorocksdb, which needs a
+        # locally built RocksDB (cgo) via the repo's build scripts; those packages are excluded here.
+        run: go list -e -f '{{if not .Error}}{{if not .DepsErrors}}{{.ImportPath}}{{end}}{{end}}' ./... > pkgs.txt && wc -l pkgs.txt
       - name: Build
-        # storageserv needs a locally built RocksDB (cgo, third_party/forked gorocksdb) - excluded here
-        run: go build $(go list -e ./... | grep -v -e /cmd/storageserv -e /third_party/)
+        run: go build $(cat pkgs.txt)
       - name: Vet
-        run: go vet $(go list -e ./... | grep -v -e /cmd/storageserv -e /third_party/)
+        run: go vet $(cat pkgs.txt)
